@@ -1,0 +1,22 @@
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/signage.service <<'EOF'
+[Unit]
+Description=Signage (mpv looping Box videos)
+After=default.target
+
+[Service]
+# Use conda's python from the 'signage' env
+ExecStart=/home/pi/miniconda3/bin/conda run --no-capture-output -n signage python /home/pi/signage.py
+Restart=always
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+# If you're on Raspberry Pi Desktop and need it, uncomment next line
+# Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user enable --now signage
+loginctl enable-linger pi

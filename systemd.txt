@@ -1,0 +1,29 @@
+sudo mkdir -p /mnt/box
+sudo tee /etc/systemd/system/rclone-box.service >/dev/null <<'EOF'
+[Unit]
+Description=Rclone FUSE mount for Box (restricted to folder via root_folder_id)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=notify
+User=pi
+Group=pi
+Environment=RCLONE_CONFIG=/home/pi/.config/rclone/rclone.conf
+ExecStart=/usr/bin/rclone mount box:/ /mnt/box \
+  --vfs-cache-mode=full \
+  --dir-cache-time=5m \
+  --poll-interval=1m \
+  --umask=002 \
+  --allow-other
+ExecStop=/bin/fusermount -u /mnt/box
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo usermod -aG fuse,video pi
+sudo systemctl daemon-reload
+sudo systemctl enable --now rclone-box
